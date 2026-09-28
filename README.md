@@ -29,10 +29,10 @@
 ## 🚀 الاستخدام السريع
 
 ### الطريقة 1: عبر GitHub Pages (بعد التفعيل)
-افتح الرابط: `https://username.github.io/kintrol-system/`
+افتح الرابط: `https://github.com/othis444/District_Control_System`
 
 ### الطريقة 2: محلياً
-1. حمّل ملف `index.html`
+1. حمّل ملف `Control_System_V2.1.html`
 2. افتحه بأي متصفح حديث
 3. ابدأ برفع ملف Excel
 
@@ -72,4 +72,4 @@
 
 ## 📧 التواصل
 
-للتواصل والاستفسارات: [بريدك@example.com]
+للتواصل والاستفسارات: [othis444@gmail.com]
