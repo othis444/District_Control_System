@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-bs-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>منظومة الكنترول v2.1 - تخطيط ذكي</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.rtl.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+<style>
+:root { --print-cell-height:22px; --print-font-size:11px; --accent-blue:#2563eb; --primary-blue:#1e3a8a; }
+body { font-family:'Cairo',sans-serif; padding-bottom:40px; }
+.app-navbar { background:linear-gradient(90deg,#0f172a 0%,#1e3a8a 100%); box-shadow:0 4px 15px rgba(0,0,0,.15); }
+.card-custom { background:var(--bs-body-bg); border:1px solid var(--bs-border-color); border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,.05); }
+.nav-tabs .nav-link { color:var(--bs-secondary-color); font-weight:700; border:none; padding:.75rem 1.25rem; border-radius:10px 10px 0 0; transition:all .2s; }
+.nav-tabs .nav-link.active { color:#fff!important; background:linear-gradient(135deg,#1e3a8a 0%,#2563eb 100%); box-shadow:0 4px 12px rgba(37,99,235,.25); }
+.nav-tabs .nav-link:hover:not(.active) { background-color:var(--bs-secondary-bg); }
+.stat-card { border-radius:12px; color:#fff; padding:1.25rem; position:relative; overflow:hidden; box-shadow:0 6px 18px rgba(0,0,0,.08); transition:transform .2s; }
+.stat-card:hover { transform:translateY(-3px); }
+.stat-card .stat-icon { position:absolute; left:-10px; bottom:-10px; font-size:4rem; opacity:.15; transform:rotate(10deg); }
+.stat-card .stat-val { font-size:2rem; font-weight:800; line-height:1; }
+.upload-zone { border:2px dashed var(--accent-blue); border-radius:14px; padding:30px; text-align:center; background:var(--bs-tertiary-bg); cursor:pointer; transition:all .2s; }
+.upload-zone:hover { border-color:#1d4ed8; transform:scale(1.01); }
+.upload-zone.dragover { background:rgba(37,99,235,.1); border-color:#1d4ed8; }
+.section-title { font-weight:800; font-size:15px; display:flex; align-items:center; gap:8px; margin-bottom:12px; padding-bottom:8px; border-bottom:2px solid var(--bs-border-color); }
+.chart-wrap { position:relative; height:300px; width:100%; }
+.chart-wrap canvas { position:absolute; inset:0; }
+.school-card { border:1px solid var(--bs-border-color); border-radius:10px; padding:14px; margin-bottom:12px; background:var(--bs-body-bg); transition:box-shadow .2s; }
+.school-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.08); }
+.school-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; padding-bottom:10px; border-bottom:2px solid rgba(37,99,235,.15); }
+.school-name { font-weight:800; font-size:15px; color:var(--primary-blue); display:flex; align-items:center; gap:8px; }
+.school-total { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; padding:5px 14px; border-radius:20px; font-weight:800; font-size:13px; }
+.class-bar-row { display:grid; grid-template-columns:110px 1fr 55px; gap:10px; align-items:center; margin-bottom:6px; font-size:12.5px; }
+.class-bar-label { font-weight:700; text-align:right; }
+.class-bar-track { background:var(--bs-tertiary-bg); height:18px; border-radius:9px; overflow:hidden; }
+.class-bar-fill { height:100%; background:linear-gradient(90deg,#2563eb,#06b6d4); border-radius:9px; transition:width .4s; }
+.class-bar-count { font-weight:800; color:var(--primary-blue); text-align:center; font-family:'Courier New',monospace; }
+[data-bs-theme="dark"] .class-bar-track { background:rgba(148,163,184,.15); }
+[data-bs-theme="dark"] .class-bar-count { color:#93c5fd; }
+[data-bs-theme="dark"] .school-name { color:#93c5fd; }
+.mode-toggle { display:flex; gap:8px; flex-wrap:wrap; }
+.mode-toggle .btn { font-weight:700; padding:10px 18px; border-radius:10px; }
+.mode-toggle .btn.active-mode { background:linear-gradient(135deg,#1e3a8a,#2563eb); color:#fff; border:none; box-shadow:0 4px 12px rgba(37,99,235,.3); }
+.col-chip { display:flex; align-items:center; gap:8px; background:var(--bs-tertiary-bg); border:1px solid var(--bs-border-color); border-radius:8px; padding:6px 10px; margin-bottom:6px; flex-wrap:wrap; }
+.col-chip select { font-size:13px; font-weight:600; }
+.col-chip .field-sel { flex:1; min-width:150px; }
+.col-chip .label-inp { width:170px; font-size:13px; }
+.col-chip .prio-sel { width:110px; font-size:13px; font-weight:700; }
+.col-chip .btn-remove { color:#dc2626; padding:2px 8px; }
+.col-chip .btn-move { padding:2px 8px; }
+.auto-toggle-badge { background:linear-gradient(135deg,#10b981,#059669); color:#fff; padding:4px 12px; border-radius:20px; font-weight:700; font-size:11px; }
+.print-sheet { background:#fff; color:#000; width:210mm; height:297mm; max-height:297mm; margin:15px auto; padding:6mm 6mm; box-shadow:0 6px 20px rgba(0,0,0,.2); box-sizing:border-box; display:flex; flex-direction:column; justify-content:space-between; page-break-after:always; break-after:page; overflow:hidden; position:relative; }
+.report-header { border:2px solid #000; border-radius:4px; padding:4px 10px; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; background:#f8fafc; flex-shrink:0; gap:8px; }
+.report-header h2 { font-size:14px; font-weight:800; margin:0; color:var(--primary-blue); }
+.report-header h3 { font-size:11px; font-weight:700; margin:0; }
+.report-header .meta-line { font-size:10px; font-weight:700; }
+.grid-columns { display:flex; flex-direction:row; justify-content:space-between; gap:3px; flex:1 1 auto; width:100%; overflow:hidden; }
+.sub-column { flex:1; min-width:0; box-sizing:border-box; }
+.secret-table { width:100%; border-collapse:collapse; border:1.2px solid #000; table-layout:fixed; }
+.secret-table th { background:#1e3a8a; color:#fff; font-size:9.5px; font-weight:800; padding:2px 1px; text-align:center; border:1px solid #000; }
+.secret-table td { border:1px solid #000; font-size:var(--print-font-size); font-weight:700; text-align:center; padding:0; height:var(--print-cell-height); box-sizing:border-box; line-height:var(--print-cell-height); overflow:hidden; }
+.secret-table tr:nth-child(even) td { background:#f1f5f9; }
+.secret-num-box { font-family:'Courier New',monospace; font-weight:800; direction:ltr; }
+
+/* =====================================================
+   GENERAL TABLE - SMART LAYOUT
+   ===================================================== */
+.general-table-wrap { flex:1 1 auto; overflow:hidden; display:flex; flex-direction:column; }
+.general-table {
+    width:100%;
+    border-collapse:collapse;
+    border:1.5px solid #000;
+    table-layout:fixed;    /* required for colgroup widths */
+}
+.general-table thead {
+    display:table-header-group;
+}
+.general-table th {
+    background:#1e3a8a;
+    color:#fff;
+    font-size:10px;
+    font-weight:800;
+    padding:4px 3px;
+    text-align:center;
+    border:1px solid #000;
+    vertical-align:middle;
+    /* >>> HEADER: wrap text like Excel <<< */
+    white-space:normal;
+    word-break:break-word;
+    overflow-wrap:break-word;
+    line-height:1.15;
+    letter-spacing:0;
+    hyphens:auto;
+}
+.general-table td {
+    border:1px solid #000;
+    font-size:var(--print-font-size);
+    font-weight:700;
+    text-align:center;
+    height:var(--print-cell-height);
+    line-height:var(--print-cell-height);
+    padding:0 3px;
+    /* >>> DATA: never wrap - use ellipsis <<< */
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    vertical-align:middle;
+}
+.general-table tr:nth-child(even) td { background:#f1f5f9; }
+.general-table td.align-right { text-align:right; direction:rtl; }
+.general-table td.mono { font-family:'Courier New',monospace; direction:ltr; }
+/* Reduce font in narrow columns via class */
+.general-table th.narrow-h { font-size:9px; padding:3px 2px; }
+
+.report-footer { border-top:1.2px solid #000; padding-top:3px; margin-top:3px; display:flex; justify-content:space-between; align-items:center; font-size:9.5px; font-weight:700; flex-shrink:0; gap:6px; }
+.page-selector { position:absolute; top:4px; left:4px; z-index:10; background:rgba(255,255,255,.95); border:2px solid #2563eb; border-radius:6px; padding:2px 6px; font-size:11px; font-weight:700; color:#1e3a8a; display:flex; align-items:center; gap:4px; }
+.fit-indicator { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:700; }
+.fit-ok { background:#d1fae5; color:#065f46; }
+.fit-warn { background:#fef3c7; color:#92400e; }
+.fit-bad { background:#fee2e2; color:#991b1b; }
+.toast-container { position:fixed; top:80px; left:20px; z-index:9999; }
+.loading-overlay { position:fixed; inset:0; background:rgba(15,23,42,.7); z-index:9998; display:none; align-items:center; justify-content:center; flex-direction:column; gap:15px; color:#fff; }
+.loading-overlay.show { display:flex; }
+.badge-soft { background:rgba(37,99,235,.1); color:#1e3a8a; padding:4px 10px; border-radius:20px; font-weight:700; font-size:12px; }
+[data-bs-theme="dark"] .badge-soft { color:#93c5fd; }
+.pages-grid { display:flex; flex-direction:column; gap:20px; }
+
+@media print {
+    @page { size:A4 portrait; margin:0; }
+    body { background:#fff!important; padding:0!important; margin:0!important; }
+    .no-print { display:none!important; }
+    .print-sheet { box-shadow:none!important; margin:0!important; width:100%!important; height:297mm!important; max-height:297mm!important; padding:6mm 6mm!important; page-break-after:always; }
+    .print-sheet:last-child { page-break-after:auto; }
+    .page-selector { display:none!important; }
+    .print-sheet.unchecked { display:none!important; }
+}
+</style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar mb-4 no-print">
+    <div class="container-fluid px-4">
+        <a class="navbar-brand fw-bold d-flex align-items-center gap-2" href="#">
+            <i class="fas fa-shield-alt fa-lg text-warning"></i>
+            <span>منظومة الكنترول v2.1 - التخطيط الذكي</span>
+        </a>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="badge bg-warning text-dark px-3 py-2 fw-bold" id="fileStatusBadge">
+                <i class="fas fa-circle-notch me-1"></i>لم يتم تحميل ملف
+            </span>
+            <button class="btn btn-sm btn-outline-light" id="themeToggle" onclick="toggleTheme()" title="تبديل الوضع"><i class="fas fa-moon"></i></button>
+        </div>
+    </div>
+</nav>
+
+<div class="container-fluid px-4 no-print">
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#uploadPane"><i class="fas fa-file-excel me-2"></i>رفع البيانات</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#schoolsPane"><i class="fas fa-school me-2"></i>المدارس والصفوف <span class="badge bg-primary ms-1" id="totalSchoolsBadge">0</span></button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#statsPane"><i class="fas fa-chart-pie me-2"></i>الإحصائيات</button></li>
+        <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#reportsPane"><i class="fas fa-print me-2"></i>كشوفات الطباعة</button></li>
+    </ul>
+
+    <div class="tab-content">
+        <!-- Tab 1 -->
+        <div class="tab-pane fade show active" id="uploadPane">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card-custom p-4">
+                        <h5 class="section-title text-primary"><i class="fas fa-cloud-upload-alt"></i>استيراد ملف الطلاب (.xlsx / .xls)</h5>
+                        <div class="upload-zone" id="dropZone">
+                            <i class="fas fa-file-excel fa-4x text-success mb-3"></i>
+                            <h5 class="fw-bold">اضغط هنا أو اسحب الملف مباشرة</h5>
+                            <p class="text-muted small mb-0">يقرأ النظام ورقة <code>studentnumbers</code> تلقائياً، ويتعرف على جميع الأعمدة.</p>
+                            <input type="file" id="excelFileInput" class="d-none" accept=".xlsx, .xls">
+                        </div>
+                        <div id="fileInfoArea" class="mt-3 d-none">
+                            <div class="alert alert-success mb-2">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                                    <span><i class="fas fa-check-circle me-2"></i><strong id="loadedFileName"></strong></span>
+                                    <span class="badge bg-primary fs-6" id="loadedStudentsCount">0 طالب</span>
+                                </div>
+                            </div>
+                            <div id="detectedFieldsBox" class="mt-2"></div>
+                            <div id="dataQualityWarnings"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 2 -->
+        <div class="tab-pane fade" id="schoolsPane">
+            <div class="row g-3 mb-4">
+                <div class="col-md-4"><div class="stat-card" style="background:linear-gradient(135deg,#1e3a8a,#2563eb);"><i class="fas fa-school stat-icon"></i><div>إجمالي المدارس</div><div class="stat-val mt-2" id="kpiTotalSchools">0</div></div></div>
+                <div class="col-md-4"><div class="stat-card" style="background:linear-gradient(135deg,#0284c7,#06b6d4);"><i class="fas fa-user-graduate stat-icon"></i><div>إجمالي الطلاب</div><div class="stat-val mt-2" id="kpiTotalStudents">0</div></div></div>
+                <div class="col-md-4"><div class="stat-card" style="background:linear-gradient(135deg,#d97706,#f59e0b);"><i class="fas fa-layer-group stat-icon"></i><div>عدد الصفوف</div><div class="stat-val mt-2" id="kpiTotalClasses">0</div></div></div>
+            </div>
+            <div class="card-custom p-3">
+                <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+                    <h5 class="section-title text-primary mb-0 flex-grow-1"><i class="fas fa-list"></i>توزيع الطلاب لكل مدرسة</h5>
+                    <input type="text" id="searchSchoolInput" class="form-control form-control-sm" style="max-width:280px;" placeholder="🔍 بحث باسم المدرسة..." oninput="filterSchoolsTable()">
+                </div>
+                <div id="schoolsCardsContainer"><div class="text-center text-muted py-4">يرجى رفع ملف الإكسل لعرض البيانات.</div></div>
+            </div>
+        </div>
+
+        <!-- Tab 3 -->
+        <div class="tab-pane fade" id="statsPane">
+            <div class="row g-3">
+                <div class="col-lg-6">
+                    <div class="card-custom p-3">
+                        <h6 class="section-title text-primary"><i class="fas fa-chart-bar"></i>توزيع الطلاب حسب الصف</h6>
+                        <div class="chart-wrap"><canvas id="classChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card-custom p-3">
+                        <h6 class="section-title text-primary"><i class="fas fa-chart-bar"></i>أكبر 15 مدرسة</h6>
+                        <div class="chart-wrap"><canvas id="schoolChart"></canvas></div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="card-custom p-3">
+                        <h6 class="section-title text-primary"><i class="fas fa-table"></i>بطاقات الصفوف</h6>
+                        <div id="classStatsContainer" class="row g-3"><div class="text-muted text-center py-4">لا توجد بيانات.</div></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: Reports -->
+        <div class="tab-pane fade" id="reportsPane">
+            <!-- Filters -->
+            <div class="card-custom p-3 mb-3">
+                <h6 class="section-title text-primary"><i class="fas fa-filter"></i>الفلاتر والبحث</h6>
+                <div class="row g-3">
+                    <div class="col-md-3"><label class="form-label fw-bold small">🏫 المدرسة</label><select id="filterSchoolSelect" class="form-select form-select-sm" onchange="onSchoolChange()"><option value="">— كل المدارس —</option></select></div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">📚 الصف</label><select id="filterClassSelect" class="form-select form-select-sm" onchange="renderReports()"><option value="">— كل الصفوف —</option></select></div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">↕️ الترتيب</label>
+                        <select id="sortSelect" class="form-select form-select-sm" onchange="renderReports()">
+                            <option value="secret-asc">الرقم السري (تصاعدي)</option>
+                            <option value="secret-desc">الرقم السري (تنازلي)</option>
+                            <option value="name-asc">الاسم (أ-ي)</option>
+                            <option value="school">المدرسة</option>
+                            <option value="class">الصف</option>
+                            <option value="original">الترتيب الأصلي</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">🔍 بحث</label><input type="text" id="searchStudentInput" class="form-control form-control-sm" placeholder="اسم / رقم..." oninput="renderReports()"></div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">▶️ ابدأ من رقم</label><input type="number" id="rangeStart" class="form-control form-control-sm" value="1" min="1" oninput="renderReports()"></div>
+                    <div class="col-md-3"><label class="form-label fw-bold small">⏹️ عدد الطلاب</label><input type="number" id="rangeCount" class="form-control form-control-sm" placeholder="الكل" min="1" oninput="renderReports()"></div>
+                    <div class="col-md-6 d-flex align-items-end gap-2">
+                        <button class="btn btn-outline-secondary btn-sm" onclick="resetFilters()"><i class="fas fa-undo me-1"></i>إعادة تعيين</button>
+                        <button class="btn btn-outline-success btn-sm" onclick="exportFiltered()"><i class="fas fa-file-export me-1"></i>تصدير Excel</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Print Mode -->
+            <div class="card-custom p-3 mb-3">
+                <h6 class="section-title text-primary"><i class="fas fa-layer-group"></i>وضع الطباعة</h6>
+                <div class="mode-toggle mb-3">
+                    <button class="btn btn-outline-primary active-mode" id="modeBlocksBtn" onclick="setPrintMode('blocks')"><i class="fas fa-th me-2"></i>كتل الأرقام المتكررة</button>
+                    <button class="btn btn-outline-primary" id="modeTableBtn" onclick="setPrintMode('table')"><i class="fas fa-table me-2"></i>الجدول العام (كشف كامل)</button>
+                </div>
+
+                <!-- Blocks config -->
+                <div id="blocksConfig">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-3"><label class="form-label fw-bold small">عدد الكتل / صفحة</label>
+                            <select id="columnsPerPage" class="form-select form-select-sm" onchange="renderReports()"><option value="3">3 كتل</option><option value="4">4 كتل</option><option value="5" selected>5 كتل</option><option value="6">6 كتل</option></select>
+                        </div>
+                        <div class="col-md-3"><label class="form-label fw-bold small">صفوف / كتلة</label>
+                            <select id="rowsPerColumn" class="form-select form-select-sm" onchange="renderReports()"><option value="25">25</option><option value="30">30</option><option value="35">35</option><option value="40" selected>40</option><option value="45">45</option><option value="50">50</option></select>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-center"><div id="fitIndicator" class="fit-indicator fit-ok w-100 justify-content-center"><i class="fas fa-check-circle"></i><span>الإعدادات مناسبة لـ A4</span></div></div>
+                    </div>
+                    <div class="p-3 rounded" style="background:var(--bs-tertiary-bg);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-bold small mb-0">🧩 أعمدة كل كتلة:</label>
+                            <button class="btn btn-sm btn-primary" onclick="addBlockColumn()"><i class="fas fa-plus me-1"></i>إضافة عمود</button>
+                        </div>
+                        <div id="blockColumnsContainer"></div>
+                    </div>
+                </div>
+
+                <!-- Table config -->
+                <div id="tableConfig" style="display:none;">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4"><label class="form-label fw-bold small">صفوف / صفحة</label>
+                            <select id="tableRowsPerPage" class="form-select form-select-sm" onchange="renderReports()"><option value="25">25</option><option value="30" selected>30</option><option value="35">35</option><option value="40">40</option></select>
+                        </div>
+                        <div class="col-md-8 d-flex align-items-center gap-3 flex-wrap">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="twoColumnTableChk" onchange="renderReports()">
+                                <label class="form-check-label fw-bold small" for="twoColumnTableChk">عمودان متجاوران (توفير ورق)</label>
+                            </div>
+                            <span class="auto-toggle-badge"><i class="fas fa-magic me-1"></i>العروض تلقائية حسب المحتوى</span>
+                        </div>
+                    </div>
+                    <div class="p-3 rounded" style="background:var(--bs-tertiary-bg);">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <label class="fw-bold small mb-0">📋 أعمدة الكشف (رتب + أولوية العرض):</label>
+                            <button class="btn btn-sm btn-primary" onclick="addTableColumn()"><i class="fas fa-plus me-1"></i>إضافة عمود</button>
+                        </div>
+                        <div id="tableColumnsContainer"></div>
+                        <div class="mt-2 small text-muted"><i class="fas fa-info-circle me-1"></i>الأولوية تؤثر على حساب العرض: ضيق ← أقل، واسع ← أكبر. التفاف الترويسة يعمل تلقائياً كالإكسل.</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dimensions + Header/Footer -->
+            <div class="row g-3 mb-3">
+                <div class="col-lg-6">
+                    <div class="card-custom p-3 h-100">
+                        <h6 class="section-title text-primary"><i class="fas fa-text-height"></i>الأبعاد</h6>
+                        <div class="row g-2">
+                            <div class="col-6"><label class="form-label fw-bold small">حجم الخط</label>
+                                <select id="fontSizeSelect" class="form-select form-select-sm" onchange="updateCellDimensions()">
+                                    <option value="9">9px</option><option value="10">10px</option><option value="11" selected>11px</option><option value="12">12px</option><option value="13">13px</option><option value="14">14px</option>
+                                </select>
+                            </div>
+                            <div class="col-6"><label class="form-label fw-bold small">ارتفاع الخلية</label>
+                                <select id="cellHeightSelect" class="form-select form-select-sm" onchange="updateCellDimensions()">
+                                    <option value="18">18px</option><option value="20">20px</option><option value="22" selected>22px</option><option value="24">24px</option><option value="26">26px</option><option value="28">28px</option><option value="30">30px</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="showHeaderChk" checked onchange="renderReports()"><label class="form-check-label fw-bold small" for="showHeaderChk">إظهار الترويسة</label></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="showFooterChk" checked onchange="renderReports()"><label class="form-check-label fw-bold small" for="showFooterChk">إظهار التذييل</label></div>
+                            <div class="form-check form-switch"><input class="form-check-input" type="checkbox" id="showPageNumChk" checked onchange="renderReports()"><label class="form-check-label fw-bold small" for="showPageNumChk">ترقيم الصفحات</label></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card-custom p-3 h-100">
+                        <h6 class="section-title text-primary"><i class="fas fa-heading"></i>الترويسة والتذييل</h6>
+                        <div class="row g-2">
+                            <div class="col-6"><label class="form-label fw-bold small">المديرية</label><input type="text" id="headerDistrict" class="form-control form-control-sm" value="مديرية التربية والتعليم" onchange="renderReports()"></div>
+                            <div class="col-6"><label class="form-label fw-bold small">المادة</label><input type="text" id="headerSubject" class="form-control form-control-sm" value="جميع المواد" onchange="renderReports()"></div>
+                            <div class="col-6"><label class="form-label fw-bold small">عنوان الكشف</label><input type="text" id="headerTitle" class="form-control form-control-sm" value="كشف رصد الدرجات" onchange="renderReports()"></div>
+                            <div class="col-6"><label class="form-label fw-bold small">العام الدراسي</label><input type="text" id="headerAcademic" class="form-control form-control-sm" value="2025/2026م" onchange="renderReports()"></div>
+                            <div class="col-4"><label class="form-label fw-bold small">تذييل يمين</label><input type="text" id="footerRight" class="form-control form-control-sm" value="اسم الراصد: ......." onchange="renderReports()"></div>
+                            <div class="col-4"><label class="form-label fw-bold small">تذييل وسط</label><input type="text" id="footerCenter" class="form-control form-control-sm" value="توقيع المراجع: ......." onchange="renderReports()"></div>
+                            <div class="col-4"><label class="form-label fw-bold small">تذييل يسار</label><input type="text" id="footerLeft" class="form-control form-control-sm" value="اعتماد الكنترول: ......." onchange="renderReports()"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-custom p-3 mb-4">
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                    <div class="d-flex flex-wrap gap-2">
+                        <span class="badge-soft"><i class="fas fa-users me-1"></i>طلاب: <span id="reportStudentsCount" class="text-danger">0</span></span>
+                        <span class="badge-soft"><i class="fas fa-file-alt me-1"></i>صفحات A4: <span id="reportPagesCount" class="text-danger">0</span></span>
+                        <span class="badge-soft"><i class="fas fa-th me-1"></i>سعة الصفحة: <span id="pageCapacityInfo">200</span></span>
+                    </div>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-secondary" onclick="selectAllPages(true)"><i class="fas fa-check-double me-1"></i>تحديد الكل</button>
+                        <button class="btn btn-outline-secondary" onclick="selectAllPages(false)"><i class="fas fa-square me-1"></i>إلغاء الكل</button>
+                        <button class="btn btn-success btn-lg fw-bold px-4" onclick="printReports()"><i class="fas fa-print me-2"></i>طباعة</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview (only inside reports tab) -->
+            <div id="previewArea" class="pages-grid"></div>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loadingOverlay"><div class="spinner-border text-warning" role="status"></div><h5 class="fw-bold" id="loadingText">جاري معالجة البيانات...</h5></div>
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ===== STATE ===== */
+const state = {
+    allStudents: [], allColumns: [], fieldMap: {}, subjects: {},
+    schools: {}, classes: {}, filtered: [],
+    charts: { class: null, school: null },
+    lastPreviewPages: [],
+    printMode: 'blocks',
+    blockColumns: [ { field:'secretNumber', width:60 }, { field:'empty', width:40 } ],
+    tableColumns: []
+};
+
+const CORE_FIELDS = {
+    serial:       { label:'م',                  keywords:[], type:'computed' },
+    secretNumber: { label:'الرقم السري',        keywords:['الرقم السري','سري','Secret','SecretNumber'], type:'text' },
+    examCode:     { label:'كود الجلوس (HVZMQ)', keywords:['HVZMQ','كود رقم الجلوس','كود الجلوس'], type:'text' },
+    seatNumber:   { label:'رقم الجلوس',         keywords:['رقم الجلوس','الجلوس'], type:'text' },
+    studentName:  { label:'اسم الطالب',         keywords:['اسم الطالب','الاسم','Name','Student Name'], type:'name' },
+    schoolName:   { label:'المدرسة',            keywords:['اسم المدرسة','المدرسة','School'], type:'text' },
+    className:    { label:'الصف',               keywords:['الصف','Class','Grade'], type:'text' },
+    gender:       { label:'النوع',              keywords:['النوع','الجنس','Gender'], type:'text' },
+    empty:        { label:'— رصد —',             keywords:[], type:'computed' }
+};
+
+/* حد أدنى للأحرف حسب نوع الحقل - لعرض مناسب */
+const FIELD_MIN_CHARS = {
+    serial: 3,
+    secretNumber: 7,
+    examCode: 9,
+    seatNumber: 6,
+    studentName: 22,
+    schoolName: 14,
+    className: 6,
+    gender: 5,
+    empty: 6
+};
+
+/* مضاعفات الأولوية */
+const PRIORITY_MULT = { narrow: 0.55, auto: 1, normal: 1.3, wide: 2.2 };
+
+/* ===== UTILS ===== */
+function showToast(m, t='info', d=3200) {
+    const c = { info:'primary', success:'success', warning:'warning', danger:'danger' };
+    const ic = { info:'info-circle', success:'check-circle', warning:'exclamation-triangle', danger:'times-circle' };
+    const id = 'toast-' + Date.now();
+    document.getElementById('toastContainer').insertAdjacentHTML('beforeend',
+        `<div id="${id}" class="toast align-items-center text-bg-${c[t]||'primary'} border-0" role="alert"><div class="d-flex"><div class="toast-body fw-bold"><i class="fas fa-${ic[t]||'info-circle'} me-2"></i>${m}</div><button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button></div></div>`);
+    const el = document.getElementById(id); const tt = new bootstrap.Toast(el,{delay:d}); tt.show();
+    el.addEventListener('hidden.bs.toast', () => el.remove());
+}
+function showLoading(t='جاري المعالجة...') { document.getElementById('loadingText').innerText = t; document.getElementById('loadingOverlay').classList.add('show'); }
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+function escapeHtml(s) { if (s==null) return ''; return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;'); }
+function naturalCompare(a,b) { const na=parseInt(a,10), nb=parseInt(b,10); if(!isNaN(na)&&!isNaN(nb)) return na-nb; return String(a).localeCompare(String(b),'ar'); }
+
+/* ===== THEME ===== */
+function toggleTheme() {
+    const html = document.documentElement;
+    const next = html.getAttribute('data-bs-theme') === 'dark' ? 'light' : 'dark';
+    html.setAttribute('data-bs-theme', next);
+    document.getElementById('themeToggle').innerHTML = next === 'dark' ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+    localStorage.setItem('theme', next);
+    if (state.allStudents.length) renderCharts();
+}
+(function() { const s = localStorage.getItem('theme'); if (s) { document.documentElement.setAttribute('data-bs-theme', s); const b = document.getElementById('themeToggle'); if (b) b.innerHTML = s==='dark'?'<i class="fas fa-sun"></i>':'<i class="fas fa-moon"></i>'; } })();
+
+/* ===== FILE UPLOAD ===== */
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('excelFileInput');
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragover'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+dropZone.addEventListener('drop', e => { e.preventDefault(); dropZone.classList.remove('dragover'); if (e.dataTransfer.files.length) { fileInput.files = e.dataTransfer.files; handleFileUpload({target:{files:e.dataTransfer.files}}); } });
+fileInput.addEventListener('change', handleFileUpload);
+
+function handleFileUpload(e) {
+    const f = e.target.files[0]; if (!f) return;
+    showLoading('جاري قراءة الملف...');
+    const r = new FileReader();
+    r.onload = ev => {
+        try {
+            const data = new Uint8Array(ev.target.result);
+            const wb = XLSX.read(data, {type:'array'});
+            let sheet = null, name = '';
+            for (const n of wb.SheetNames) { if (n.toLowerCase().trim() === 'studentnumbers') { sheet = wb.Sheets[n]; name = n; break; } }
+            if (!sheet) { sheet = wb.Sheets[wb.SheetNames[0]]; name = wb.SheetNames[0]; showToast(`استخدام "${name}"`, 'warning', 5000); }
+            const raw = XLSX.utils.sheet_to_json(sheet, {defval:''});
+            processData(raw, f.name);
+        } catch (err) { hideLoading(); showToast('خطأ: ' + err.message, 'danger', 6000); }
+    };
+    r.readAsArrayBuffer(f);
+}
+
+/* ===== PROCESS ===== */
+function processData(data, fileName) {
+    if (!data.length) { hideLoading(); showToast('الملف فارغ', 'warning'); return; }
+    state.allColumns = Object.keys(data[0]);
+    const map = {}, used = new Set();
+    for (const key in CORE_FIELDS) {
+        const def = CORE_FIELDS[key];
+        if (!def.keywords.length) continue;
+        for (const kw of def.keywords) {
+            const found = state.allColumns.find(c => c.trim().includes(kw));
+            if (found && !used.has(found)) { map[key] = found; used.add(found); break; }
+        }
+    }
+    state.fieldMap = map;
+    state.subjects = {};
+    state.allColumns.forEach(c => { if (!used.has(c) && c.trim()) state.subjects[c.trim()] = c; });
+
+    state.allStudents = data.map((row, i) => ({
+        id: i+1, _raw: row,
+        secretNumber: String(row[map.secretNumber]??'').trim(),
+        examCode:     String(row[map.examCode]??'').trim(),
+        seatNumber:   String(row[map.seatNumber]??'').trim(),
+        studentName:  String(row[map.studentName]??'').trim(),
+        schoolName:   String(row[map.schoolName]??'').trim() || 'غير محدد',
+        className:    String(row[map.className]??'').trim() || 'غير محدد',
+        gender:       String(row[map.gender]??'').trim()
+    })).filter(s => s.secretNumber || s.examCode || s.studentName);
+
+    document.getElementById('loadedFileName').innerText = fileName;
+    document.getElementById('loadedStudentsCount').innerText = `${state.allStudents.length.toLocaleString('ar-EG')} طالب`;
+    document.getElementById('fileInfoArea').classList.remove('d-none');
+    const b = document.getElementById('fileStatusBadge');
+    b.className = 'badge bg-success px-3 py-2 fw-bold';
+    b.innerHTML = `<i class="fas fa-check-circle me-1"></i>${state.allStudents.length.toLocaleString('ar-EG')} طالب`;
+
+    renderDetectedFieldsBox(); analyzeData(); validateData(); populateFilters();
+    renderSchoolsTable(); renderStats(); initializeDefaultColumns(); renderReports();
+    hideLoading(); showToast(`تم تحميل ${state.allStudents.length.toLocaleString('ar-EG')} طالب`, 'success');
+}
+
+function renderDetectedFieldsBox() {
+    const box = document.getElementById('detectedFieldsBox');
+    const parts = [];
+    for (const k in state.fieldMap) parts.push(`<span class="badge bg-success me-1 mb-1"><i class="fas fa-check me-1"></i>${CORE_FIELDS[k].label}</span>`);
+    const sc = Object.keys(state.subjects).length;
+    if (sc) parts.push(`<span class="badge bg-info me-1 mb-1"><i class="fas fa-plus me-1"></i>${sc} عمود إضافي</span>`);
+    box.innerHTML = `<div class="alert alert-light border small mb-0"><div class="fw-bold mb-2"><i class="fas fa-magic text-primary me-1"></i>الحقول المكتشفة:</div><div>${parts.join(' ') || '<span class="text-muted">لا شيء</span>'}</div></div>`;
+}
+
+/* ===== ANALYZE / VALIDATE ===== */
+function analyzeData() {
+    state.schools = {}; state.classes = {};
+    state.allStudents.forEach(s => {
+        if (!state.schools[s.schoolName]) state.schools[s.schoolName] = { total:0, classes:{} };
+        state.schools[s.schoolName].total++;
+        state.schools[s.schoolName].classes[s.className] = (state.schools[s.schoolName].classes[s.className]||0)+1;
+        state.classes[s.className] = (state.classes[s.className]||0)+1;
+    });
+    document.getElementById('kpiTotalSchools').innerText = Object.keys(state.schools).length.toLocaleString('ar-EG');
+    document.getElementById('kpiTotalStudents').innerText = state.allStudents.length.toLocaleString('ar-EG');
+    document.getElementById('kpiTotalClasses').innerText = Object.keys(state.classes).length.toLocaleString('ar-EG');
+    document.getElementById('totalSchoolsBadge').innerText = Object.keys(state.schools).length;
+}
+
+function validateData() {
+    const w = [], sc = {};
+    let ms = 0, mc = 0, msec = 0;
+    state.allStudents.forEach(s => {
+        if (s.secretNumber) sc[s.secretNumber] = (sc[s.secretNumber]||0)+1; else msec++;
+        if (s.schoolName === 'غير محدد') ms++;
+        if (s.className === 'غير محدد') mc++;
+    });
+    const dups = Object.entries(sc).filter(([,c]) => c > 1);
+    if (dups.length) w.push({t:'warning',i:'exclamation-triangle',x:`<strong>${dups.length}</strong> رقم سري مكرر.`});
+    if (msec) w.push({t:'danger',i:'times-circle',x:`<strong>${msec}</strong> بدون رقم سري.`});
+    if (ms) w.push({t:'info',i:'info-circle',x:`<strong>${ms}</strong> بدون مدرسة.`});
+    if (mc) w.push({t:'info',i:'info-circle',x:`<strong>${mc}</strong> بدون صف.`});
+    document.getElementById('dataQualityWarnings').innerHTML = w.map(x => `<div class="alert alert-${x.t} py-2 px-3 mb-1 small"><i class="fas fa-${x.i} me-1"></i>${x.x}</div>`).join('') || `<div class="alert alert-success py-2 px-3 mb-1 small"><i class="fas fa-check-circle me-1"></i>جودة البيانات سليمة.</div>`;
+}
+
+/* ===== SCHOOLS CARDS ===== */
+function renderSchoolsTable() {
+    const c = document.getElementById('schoolsCardsContainer');
+    const schools = Object.entries(state.schools).sort((a,b) => b[1].total - a[1].total);
+    if (!schools.length) { c.innerHTML = '<div class="text-center text-muted py-4">لا توجد بيانات.</div>'; return; }
+    let max = 1;
+    schools.forEach(([,d]) => Object.values(d.classes).forEach(x => { if (x > max) max = x; }));
+    c.innerHTML = schools.map(([name, d], i) => {
+        const rows = Object.entries(d.classes).sort((a,b) => a[0].localeCompare(b[0],'ar')).map(([cls, cnt]) => {
+            const pct = Math.max(4, (cnt / max) * 100);
+            return `<div class="class-bar-row"><div class="class-bar-label" title="${escapeHtml(cls)}">${escapeHtml(cls)}</div><div class="class-bar-track"><div class="class-bar-fill" style="width:${pct}%"></div></div><div class="class-bar-count">${cnt}</div></div>`;
+        }).join('');
+        return `<div class="school-card" data-school="${escapeHtml(name)}"><div class="school-header"><div class="school-name"><i class="fas fa-school text-warning"></i>${i+1}. ${escapeHtml(name)}</div><div class="school-total">${d.total} طالب</div></div><div>${rows}</div></div>`;
+    }).join('');
+}
+function filterSchoolsTable() {
+    const v = document.getElementById('searchSchoolInput').value.toLowerCase();
+    document.querySelectorAll('#schoolsCardsContainer .school-card').forEach(c => {
+        c.style.display = (c.dataset.school||'').toLowerCase().includes(v) ? '' : 'none';
+    });
+}
+
+/* ===== FILTERS ===== */
+function populateFilters() {
+    const s = document.getElementById('filterSchoolSelect');
+    s.innerHTML = '<option value="">— كل المدارس —</option>';
+    Object.keys(state.schools).sort().forEach(sch => { s.innerHTML += `<option value="${escapeHtml(sch)}">${escapeHtml(sch)} (${state.schools[sch].total})</option>`; });
+    updateClassFilterOptions();
+    document.getElementById('rangeStart').value = 1;
+}
+function updateClassFilterOptions() {
+    const sch = document.getElementById('filterSchoolSelect').value;
+    const sel = document.getElementById('filterClassSelect');
+    const cur = sel.value;
+    const list = sch ? (state.schools[sch]?.classes || {}) : state.classes;
+    sel.innerHTML = '<option value="">— كل الصفوف —</option>';
+    Object.keys(list).sort().forEach(cls => { sel.innerHTML += `<option value="${escapeHtml(cls)}">${escapeHtml(cls)} (${list[cls]})</option>`; });
+    if (cur && list[cur]) sel.value = cur;
+}
+function onSchoolChange() { updateClassFilterOptions(); renderReports(); }
+
+function applyFilters() {
+    const sch = document.getElementById('filterSchoolSelect').value;
+    const cls = document.getElementById('filterClassSelect').value;
+    const sort = document.getElementById('sortSelect').value;
+    const q = document.getElementById('searchStudentInput').value.trim().toLowerCase();
+    let r = state.allStudents.slice();
+    if (sch) r = r.filter(s => s.schoolName === sch);
+    if (cls) r = r.filter(s => s.className === cls);
+    if (q) r = r.filter(s => s.studentName.toLowerCase().includes(q) || s.secretNumber.toLowerCase().includes(q) || s.examCode.toLowerCase().includes(q) || s.seatNumber.toLowerCase().includes(q));
+    switch (sort) {
+        case 'secret-asc':  r.sort((a,b) => naturalCompare(a.secretNumber, b.secretNumber)); break;
+        case 'secret-desc': r.sort((a,b) => naturalCompare(b.secretNumber, a.secretNumber)); break;
+        case 'name-asc':    r.sort((a,b) => a.studentName.localeCompare(b.studentName,'ar')); break;
+        case 'school':      r.sort((a,b) => a.schoolName.localeCompare(b.schoolName,'ar')); break;
+        case 'class':       r.sort((a,b) => naturalCompare(a.className, b.className)); break;
+    }
+    const st = Math.max(1, parseInt(document.getElementById('rangeStart').value) || 1);
+    const cv = parseInt(document.getElementById('rangeCount').value);
+    const ct = Number.isFinite(cv) && cv > 0 ? cv : null;
+    const from = st - 1, to = ct ? from + ct : r.length;
+    return r.slice(from, to);
+}
+
+/* ===== STATS ===== */
+function renderStats() {
+    const c = document.getElementById('classStatsContainer');
+    const sorted = Object.entries(state.classes).sort((a,b) => b[1] - a[1]);
+    c.innerHTML = sorted.map(([cls, cnt]) => `<div class="col-md-3 col-sm-6"><div class="p-3 border rounded text-center h-100" style="background:var(--bs-tertiary-bg);"><h6 class="text-primary fw-bold mb-1">${escapeHtml(cls)}</h6><h3 class="fw-bold my-2">${cnt}</h3><span class="text-muted small">طالب</span></div></div>`).join('') || '<div class="text-muted text-center py-4">لا توجد بيانات.</div>';
+    renderCharts();
+}
+function renderCharts() {
+    const isDark = document.documentElement.getAttribute('data-bs-theme') === 'dark';
+    const tc = isDark ? '#e2e8f0' : '#0f172a';
+    const gc = isDark ? 'rgba(148,163,184,.15)' : 'rgba(100,116,139,.1)';
+    const ce = Object.entries(state.classes).sort((a,b) => naturalCompare(a[0], b[0]));
+    const cc = document.getElementById('classChart').getContext('2d');
+    if (state.charts.class) state.charts.class.destroy();
+    state.charts.class = new Chart(cc, { type:'bar', data:{ labels:ce.map(e=>e[0]), datasets:[{ label:'عدد الطلاب', data:ce.map(e=>e[1]), backgroundColor:'rgba(37,99,235,.75)', borderColor:'rgba(30,58,138,1)', borderWidth:1, borderRadius:6 }] }, options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{ticks:{color:tc,font:{family:'Cairo',weight:'700'}},grid:{color:gc}}, y:{beginAtZero:true,ticks:{color:tc,font:{family:'Cairo'}},grid:{color:gc}} } } });
+    const ts = Object.entries(state.schools).map(([n,d]) => [n,d.total]).sort((a,b) => b[1]-a[1]).slice(0,15);
+    const sc = document.getElementById('schoolChart').getContext('2d');
+    if (state.charts.school) state.charts.school.destroy();
+    state.charts.school = new Chart(sc, { type:'bar', data:{ labels:ts.map(e=>e[0].length>28?e[0].slice(0,28)+'…':e[0]), datasets:[{ label:'عدد الطلاب', data:ts.map(e=>e[1]), backgroundColor:'rgba(6,182,212,.75)', borderColor:'rgba(2,132,199,1)', borderWidth:1, borderRadius:6 }] }, options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}}, scales:{ x:{beginAtZero:true,ticks:{color:tc,font:{family:'Cairo'}},grid:{color:gc}}, y:{ticks:{color:tc,font:{family:'Cairo',weight:'600',size:10}},grid:{color:gc}} } } });
+}
+
+/* ===== DIMENSIONS ===== */
+function updateCellDimensions() {
+    document.documentElement.style.setProperty('--print-font-size', document.getElementById('fontSizeSelect').value + 'px');
+    document.documentElement.style.setProperty('--print-cell-height', document.getElementById('cellHeightSelect').value + 'px');
+    checkFit();
+}
+function checkFit() {
+    const rows = parseInt(document.getElementById('rowsPerColumn').value);
+    const h = parseInt(document.getElementById('cellHeightSelect').value);
+    const ind = document.getElementById('fitIndicator');
+    const isTable = state.printMode === 'table';
+    // header wraps up to 3 lines
+    const headerBudget = isTable ? 45 : 30;
+    const footerBudget = 30;
+    const avail = 1000 - headerBudget - footerBudget;
+    const tableH = rows * (h + 1) + 25;
+    const ratio = tableH / avail;
+    if (ratio <= 1.0) { ind.className = 'fit-indicator fit-ok'; ind.innerHTML = '<i class="fas fa-check-circle"></i><span>الإعدادات مناسبة لـ A4</span>'; }
+    else if (ratio <= 1.08) { ind.className = 'fit-indicator fit-warn'; ind.innerHTML = '<i class="fas fa-exclamation-triangle"></i><span>قد تكون الصفحة مضغوطة قليلاً</span>'; }
+    else { ind.className = 'fit-indicator fit-bad'; ind.innerHTML = '<i class="fas fa-times-circle"></i><span>تجاوز A4! قلل الصفوف/الارتفاع</span>'; }
+}
+
+/* ===== FIELD RESOLVER ===== */
+function getFieldValue(s, field, serial) {
+    if (!s) return '';
+    if (field === 'serial') return serial;
+    if (field === 'empty') return '';
+    if (field.startsWith('__subject__')) {
+        const key = field.substring('__subject__'.length);
+        return s._raw[state.subjects[key]] ?? '';
+    }
+    if (field === 'secretNumber') return s.secretNumber;
+    if (field === 'examCode') return s.examCode;
+    if (field === 'seatNumber') return s.seatNumber;
+    if (field === 'studentName') return s.studentName;
+    if (field === 'schoolName') return s.schoolName;
+    if (field === 'className') return s.className;
+    if (field === 'gender') return s.gender;
+    return '';
+}
+function getFieldAlign(field) {
+    if (field === 'studentName' || field === 'schoolName') return 'align-right';
+    if (field === 'secretNumber' || field === 'examCode' || field === 'seatNumber') return 'mono';
+    return '';
+}
+function getDefaultLabel(field) {
+    if (field.startsWith('__subject__')) return field.substring('__subject__'.length);
+    return CORE_FIELDS[field]?.label || '—';
+}
+
+/* =========================================================
+   ⭐ SMART COLUMN WIDTHS (NEW!)
+   ========================================================= */
+function calculateAutoWidths(students, columns) {
+    // Sample first 400 for performance
+    const sample = students.slice(0, 400);
+
+    const weights = columns.map(tc => {
+        // 1. Header weight (reduced because headers wrap)
+        const headerText = (tc.label || getDefaultLabel(tc.field) || '').trim();
+        let headerWeight = Math.ceil(headerText.length * 0.45);
+        // Cap: header should never dominate
+        if (headerWeight > 8) headerWeight = 8;
+
+        // 2. Actual data max length
+        let maxData = 0;
+        for (const s of sample) {
+            const v = String(getFieldValue(s, tc.field, 1));
+            if (v.length > maxData) maxData = v.length;
+        }
+
+        // 3. Type-based minimum
+        const typeMin = FIELD_MIN_CHARS[tc.field] || 5;
+
+        // 4. Base weight
+        const base = Math.max(maxData, typeMin, headerWeight);
+
+        // 5. Priority multiplier
+        const mult = PRIORITY_MULT[tc.priority || 'auto'] || 1;
+
+        return base * mult;
+    });
+
+    const total = weights.reduce((a,b) => a+b, 0) || 1;
+    return weights.map(w => (w / total) * 100);
+}
+
+/* ===== BLOCKS MODE ===== */
+function renderBlocksMode(filtered) {
+    const perPage = parseInt(document.getElementById('columnsPerPage').value);
+    const rowsPerCol = parseInt(document.getElementById('rowsPerColumn').value);
+    const itemsPerPage = perPage * rowsPerCol;
+    const totalPages = Math.ceil(filtered.length / itemsPerPage);
+    document.getElementById('reportPagesCount').innerText = totalPages;
+    document.getElementById('pageCapacityInfo').innerText = itemsPerPage;
+    const preview = document.getElementById('previewArea');
+    const frag = document.createDocumentFragment();
+    const showHeader = document.getElementById('showHeaderChk').checked;
+    const showFooter = document.getElementById('showFooterChk').checked;
+    const showPageNum = document.getElementById('showPageNumChk').checked;
+    const district = document.getElementById('headerDistrict').value;
+    const subject = document.getElementById('headerSubject').value;
+    const title = document.getElementById('headerTitle').value;
+    const academic = document.getElementById('headerAcademic').value;
+    const fR = document.getElementById('footerRight').value, fC = document.getElementById('footerCenter').value, fL = document.getElementById('footerLeft').value;
+    const schoolF = document.getElementById('filterSchoolSelect').value, classF = document.getElementById('filterClassSelect').value;
+    const scope = [schoolF && `المدرسة: ${schoolF}`, classF && `الصف: ${classF}`].filter(Boolean).join(' — ');
+
+    for (let p = 0; p < totalPages; p++) {
+        const start = p * itemsPerPage;
+        const items = filtered.slice(start, start + itemsPerPage);
+        let colsHtml = '';
+        for (let c = 0; c < perPage; c++) {
+            const cStart = c * rowsPerCol;
+            const cItems = items.slice(cStart, cStart + rowsPerCol);
+            const headCells = state.blockColumns.map(bc => `<th style="width:${bc.width}%;">${escapeHtml(getDefaultLabel(bc.field))}</th>`).join('');
+            let bodyRows = '';
+            for (let r = 0; r < rowsPerCol; r++) {
+                const s = cItems[r];
+                const cells = state.blockColumns.map(bc => {
+                    const v = s ? getFieldValue(s, bc.field, start + cStart + r + 1) : '';
+                    const al = getFieldAlign(bc.field);
+                    const cls = (bc.field === 'secretNumber' || bc.field === 'examCode' || bc.field === 'seatNumber') ? 'secret-num-box' : '';
+                    return `<td class="${cls} ${al}">${escapeHtml(v)}</td>`;
+                }).join('');
+                bodyRows += `<tr>${cells}</tr>`;
+            }
+            colsHtml += `<div class="sub-column"><table class="secret-table"><thead><tr>${headCells}</tr></thead><tbody>${bodyRows}</tbody></table></div>`;
+        }
+        const sheet = document.createElement('div');
+        sheet.className = 'print-sheet'; sheet.dataset.pageIndex = p;
+        sheet.innerHTML = `
+            <div class="page-selector no-print"><input type="checkbox" checked data-page="${p}" onchange="togglePageSelection(this)"><span>صفحة ${p+1}</span></div>
+            ${showHeader ? `<div class="report-header"><div style="flex:1;"><h3>${escapeHtml(district)}</h3><div class="meta-line">المادة: ${escapeHtml(subject)}${scope ? ' — ' + escapeHtml(scope) : ''}</div></div><div class="text-center" style="flex:1.2;"><h2>${escapeHtml(title)}</h2><span class="badge bg-dark text-white px-2 py-1" style="font-size:9px;">${itemsPerPage} رقم / صفحة</span></div><div class="text-start" style="flex:1;"><h3>${escapeHtml(academic)}</h3>${showPageNum ? `<div class="meta-line">صفحة ${p+1} من ${totalPages}</div>` : ''}</div></div>` : ''}
+            <div class="grid-columns">${colsHtml}</div>
+            ${showFooter ? `<div class="report-footer"><span>${escapeHtml(fR)}</span><span>${escapeHtml(fC)}</span><span>${escapeHtml(fL)}</span></div>` : ''}`;
+        frag.appendChild(sheet);
+        state.lastPreviewPages.push(sheet);
+    }
+    preview.appendChild(frag);
+}
+
+/* =========================================================
+   ⭐ TABLE MODE with SMART WIDTHS
+   ========================================================= */
+function renderTableMode(filtered) {
+    const rowsPerPage = parseInt(document.getElementById('tableRowsPerPage').value);
+    const twoCol = document.getElementById('twoColumnTableChk').checked;
+    const perPage = twoCol ? rowsPerPage * 2 : rowsPerPage;
+    const totalPages = Math.ceil(filtered.length / perPage);
+    document.getElementById('reportPagesCount').innerText = totalPages;
+    document.getElementById('pageCapacityInfo').innerText = perPage;
+    const preview = document.getElementById('previewArea');
+    const frag = document.createDocumentFragment();
+    const showHeader = document.getElementById('showHeaderChk').checked;
+    const showFooter = document.getElementById('showFooterChk').checked;
+    const showPageNum = document.getElementById('showPageNumChk').checked;
+    const district = document.getElementById('headerDistrict').value;
+    const subject = document.getElementById('headerSubject').value;
+    const title = document.getElementById('headerTitle').value;
+    const academic = document.getElementById('headerAcademic').value;
+    const fR = document.getElementById('footerRight').value, fC = document.getElementById('footerCenter').value, fL = document.getElementById('footerLeft').value;
+    const schoolF = document.getElementById('filterSchoolSelect').value, classF = document.getElementById('filterClassSelect').value;
+    const scope = [schoolF && `المدرسة: ${schoolF}`, classF && `الصف: ${classF}`].filter(Boolean).join(' — ');
+
+    // ⭐ Calculate smart widths ONCE per render
+    const widths = calculateAutoWidths(filtered, state.tableColumns);
+    const normW = widths.map(w => Math.max(w, 1.5)); // ensure min 1.5%
+    const sumW = normW.reduce((a,b) => a+b, 0);
+    const finalW = normW.map(w => (w / sumW) * 100);
+
+    // Build header row
+    const headerRow = state.tableColumns.map((tc, i) => {
+        const label = tc.label || getDefaultLabel(tc.field) || '—';
+        const isNarrow = finalW[i] < 8;
+        return `<th class="${isNarrow ? 'narrow-h' : ''}">${escapeHtml(label)}</th>`;
+    }).join('');
+
+    // Build colgroup
+    const colgroup = `<colgroup>${finalW.map(w => `<col style="width:${w.toFixed(2)}%">`).join('')}</colgroup>`;
+
+    // Function to render body rows
+    const renderRows = (arr, baseSerial) => arr.map((s, i) => {
+        const cells = state.tableColumns.map(tc => {
+            const v = getFieldValue(s, tc.field, baseSerial + i + 1);
+            const al = getFieldAlign(tc.field);
+            const fullVal = String(v);
+            return `<td class="${al}" title="${escapeHtml(fullVal)}">${escapeHtml(fullVal)}</td>`;
+        }).join('');
+        return `<tr>${cells}</tr>`;
+    }).join('');
+
+    for (let p = 0; p < totalPages; p++) {
+        const start = p * perPage;
+        const items = filtered.slice(start, start + perPage);
+        let bodyHtml;
+        if (twoCol) {
+            const half = rowsPerPage;
+            const left = items.slice(0, half);
+            const right = items.slice(half, half * 2);
+            bodyHtml = `
+                <div class="general-table-wrap" style="display:flex; flex-direction:row; gap:6px;">
+                    <div style="flex:1; min-width:0;">
+                        <table class="general-table">${colgroup}<thead><tr>${headerRow}</tr></thead><tbody>${renderRows(left, start)}</tbody></table>
+                    </div>
+                    <div style="flex:1; min-width:0;">
+                        <table class="general-table">${colgroup}<thead><tr>${headerRow}</tr></thead><tbody>${renderRows(right, start + half)}</tbody></table>
+                    </div>
+                </div>`;
+        } else {
+            bodyHtml = `<div class="general-table-wrap"><table class="general-table">${colgroup}<thead><tr>${headerRow}</tr></thead><tbody>${renderRows(items, start)}</tbody></table></div>`;
+        }
+        const sheet = document.createElement('div');
+        sheet.className = 'print-sheet'; sheet.dataset.pageIndex = p;
+        sheet.innerHTML = `
+            <div class="page-selector no-print"><input type="checkbox" checked data-page="${p}" onchange="togglePageSelection(this)"><span>صفحة ${p+1}</span></div>
+            ${showHeader ? `<div class="report-header"><div style="flex:1;"><h3>${escapeHtml(district)}</h3><div class="meta-line">المادة: ${escapeHtml(subject)}${scope ? ' — ' + escapeHtml(scope) : ''}</div></div><div class="text-center" style="flex:1.2;"><h2>${escapeHtml(title)}</h2><span class="badge bg-dark text-white px-2 py-1" style="font-size:9px;">كشف عام</span></div><div class="text-start" style="flex:1;"><h3>${escapeHtml(academic)}</h3>${showPageNum ? `<div class="meta-line">صفحة ${p+1} من ${totalPages}</div>` : ''}</div></div>` : ''}
+            ${bodyHtml}
+            ${showFooter ? `<div class="report-footer"><span>${escapeHtml(fR)}</span><span>${escapeHtml(fC)}</span><span>${escapeHtml(fL)}</span></div>` : ''}`;
+        frag.appendChild(sheet);
+        state.lastPreviewPages.push(sheet);
+    }
+    preview.appendChild(frag);
+}
+
+/* ===== RENDER DISPATCHER ===== */
+function renderReports() {
+    const filtered = applyFilters();
+    const preview = document.getElementById('previewArea');
+    preview.innerHTML = '';
+    state.lastPreviewPages = [];
+    if (!filtered.length) {
+        document.getElementById('reportStudentsCount').innerText = '0';
+        document.getElementById('reportPagesCount').innerText = '0';
+        preview.innerHTML = `<div class="text-center text-muted py-5"><i class="fas fa-inbox fa-3x mb-3"></i><h5>لا توجد بيانات مطابقة</h5></div>`;
+        return;
+    }
+    if (state.printMode === 'blocks') renderBlocksMode(filtered);
+    else renderTableMode(filtered);
+    document.getElementById('reportStudentsCount').innerText = filtered.length.toLocaleString('ar-EG');
+    updateCellDimensions();
+}
+
+/* ===== PRINT MODE SWITCH ===== */
+function setPrintMode(mode) {
+    state.printMode = mode;
+    document.getElementById('modeBlocksBtn').classList.toggle('active-mode', mode === 'blocks');
+    document.getElementById('modeTableBtn').classList.toggle('active-mode', mode === 'table');
+    document.getElementById('blocksConfig').style.display = mode === 'blocks' ? '' : 'none';
+    document.getElementById('tableConfig').style.display = mode === 'table' ? '' : 'none';
+    renderReports();
+}
+
+/* ===== BLOCK COLUMNS ===== */
+function initializeDefaultColumns() {
+    state.blockColumns = [ { field:'secretNumber', width:60 }, { field:'empty', width:40 } ];
+    renderBlockColumns();
+    const order = ['serial','secretNumber','examCode','seatNumber','studentName','schoolName','className','gender'];
+    state.tableColumns = [];
+    order.forEach(f => {
+        if (f === 'serial' || state.fieldMap[f]) {
+            state.tableColumns.push({ field:f, priority:'auto', label:CORE_FIELDS[f].label });
+        }
+    });
+    Object.keys(state.subjects).forEach(sub => {
+        state.tableColumns.push({ field:'__subject__' + sub, priority:'auto', label: sub });
+    });
+    renderTableColumns();
+}
+function getFieldOptions(selected) {
+    const opts = [];
+    for (const k in CORE_FIELDS) {
+        if (k === 'serial' && !state.allStudents.length) continue;
+        opts.push({ value:k, label:CORE_FIELDS[k].label });
+    }
+    for (const sub in state.subjects) opts.push({ value:'__subject__' + sub, label: sub });
+    return opts.map(o => `<option value="${escapeHtml(o.value)}" ${o.value===selected?'selected':''}>${escapeHtml(o.label)}</option>`).join('');
+}
+function renderBlockColumns() {
+    const c = document.getElementById('blockColumnsContainer');
+    if (!state.blockColumns.length) { c.innerHTML = '<div class="text-muted small">لا توجد أعمدة.</div>'; return; }
+    c.innerHTML = state.blockColumns.map((col, i) => `
+        <div class="col-chip">
+            <span class="badge bg-primary">${i+1}</span>
+            <select class="form-select form-select-sm field-sel" onchange="updateBlockColumn(${i},'field',this.value)">${getFieldOptions(col.field)}</select>
+            <input type="number" class="form-control form-control-sm" style="width:75px;" min="5" max="95" value="${col.width}" onchange="updateBlockColumn(${i},'width',parseInt(this.value))" title="النسبة %">
+            <span class="small text-muted">%</span>
+            <button class="btn btn-sm btn-remove" onclick="removeBlockColumn(${i})"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+function addBlockColumn() { if (state.blockColumns.length >= 5) { showToast('الحد الأقصى 5', 'warning'); return; } state.blockColumns.push({ field:'empty', width:30 }); renderBlockColumns(); renderReports(); }
+function removeBlockColumn(i) { state.blockColumns.splice(i,1); renderBlockColumns(); renderReports(); }
+function updateBlockColumn(i,k,v) { state.blockColumns[i][k] = v; renderReports(); }
+
+/* ===== TABLE COLUMNS ===== */
+function renderTableColumns() {
+    const c = document.getElementById('tableColumnsContainer');
+    if (!state.tableColumns.length) { c.innerHTML = '<div class="text-muted small">لا توجد أعمدة.</div>'; return; }
+    c.innerHTML = state.tableColumns.map((col, i) => `
+        <div class="col-chip">
+            <button class="btn btn-sm btn-outline-secondary btn-move" onclick="moveTableColumn(${i},-1)" ${i===0?'disabled':''} title="لأعلى"><i class="fas fa-arrow-up"></i></button>
+            <button class="btn btn-sm btn-outline-secondary btn-move" onclick="moveTableColumn(${i},1)" ${i===state.tableColumns.length-1?'disabled':''} title="لأسفل"><i class="fas fa-arrow-down"></i></button>
+            <span class="badge bg-primary">${i+1}</span>
+            <select class="form-select form-select-sm field-sel" onchange="updateTableColumn(${i},'field',this.value)">${getFieldOptions(col.field)}</select>
+            <input type="text" class="form-control form-control-sm label-inp" value="${escapeHtml(col.label||'')}" onchange="updateTableColumn(${i},'label',this.value)" placeholder="عنوان العمود">
+            <select class="form-select form-select-sm prio-sel" onchange="updateTableColumn(${i},'priority',this.value)" title="أولوية العرض">
+                <option value="narrow" ${col.priority==='narrow'?'selected':''}>⬅ ضيق</option>
+                <option value="auto" ${(!col.priority||col.priority==='auto')?'selected':''}>⚙️ تلقائي</option>
+                <option value="normal" ${col.priority==='normal'?'selected':''}>عادي</option>
+                <option value="wide" ${col.priority==='wide'?'selected':''}>➡ واسع</option>
+            </select>
+            <button class="btn btn-sm btn-remove" onclick="removeTableColumn(${i})"><i class="fas fa-trash"></i></button>
+        </div>`).join('');
+}
+function addTableColumn() { if (state.tableColumns.length >= 18) { showToast('الحد 18', 'warning'); return; } state.tableColumns.push({ field:'empty', priority:'auto', label:'— فارغ —' }); renderTableColumns(); renderReports(); }
+function removeTableColumn(i) { state.tableColumns.splice(i,1); renderTableColumns(); renderReports(); }
+function updateTableColumn(i,k,v) { state.tableColumns[i][k] = v; if (k==='field') { state.tableColumns[i].label = getDefaultLabel(v); renderTableColumns(); } renderReports(); }
+function moveTableColumn(i, d) { const j = i+d; if (j<0||j>=state.tableColumns.length) return; [state.tableColumns[i], state.tableColumns[j]] = [state.tableColumns[j], state.tableColumns[i]]; renderTableColumns(); renderReports(); }
+
+/* ===== PAGES / PRINT ===== */
+function togglePageSelection(cb) { const i = parseInt(cb.dataset.page); const s = state.lastPreviewPages[i]; if (s) s.classList.toggle('unchecked', !cb.checked); }
+function selectAllPages(v) { document.querySelectorAll('.page-selector input[type=checkbox]').forEach(cb => { cb.checked = v; togglePageSelection(cb); }); }
+function printReports() {
+    const c = document.querySelectorAll('.page-selector input:checked').length;
+    if (!c) { showToast('حدد صفحة واحدة على الأقل', 'warning'); return; }
+    setTimeout(() => window.print(), 150);
+}
+
+/* ===== RESET / EXPORT ===== */
+function resetFilters() {
+    document.getElementById('filterSchoolSelect').value = '';
+    document.getElementById('filterClassSelect').value = '';
+    document.getElementById('sortSelect').value = 'secret-asc';
+    document.getElementById('searchStudentInput').value = '';
+    document.getElementById('rangeStart').value = 1;
+    document.getElementById('rangeCount').value = '';
+    updateClassFilterOptions(); renderReports();
+    showToast('تم إعادة التعيين', 'info');
+}
+function exportFiltered() {
+    const data = applyFilters();
+    if (!data.length) { showToast('لا توجد بيانات', 'warning'); return; }
+    const rows = data.map((s, i) => {
+        const row = { 'م': i+1 };
+        state.tableColumns.forEach(tc => {
+            if (tc.field === 'serial') return;
+            const lbl = tc.label || getDefaultLabel(tc.field);
+            row[lbl] = getFieldValue(s, tc.field, i+1);
+        });
+        return row;
+    });
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Filtered');
+    XLSX.writeFile(wb, `filtered_${Date.now()}.xlsx`);
+    showToast(`تم تصدير ${rows.length} سجل`, 'success');
+}
+
+/* ===== INIT ===== */
+document.querySelectorAll('[data-bs-toggle="tab"]').forEach(t => t.addEventListener('shown.bs.tab', e => { if (e.target.getAttribute('data-bs-target') === '#statsPane') renderCharts(); }));
+document.addEventListener('DOMContentLoaded', () => { updateCellDimensions(); renderBlockColumns(); renderTableColumns(); });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
